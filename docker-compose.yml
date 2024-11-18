@@ -28,7 +28,7 @@ services:
             MONGO_INITDB_ROOT_PASSWORD: "${MONGO_DB_PASSWORD}"
             MONGO_INITDB_DATABASE: "${MONGO_DB_DATABASE}"
         volumes:
-            - "sail-mongodb:/data/db"
+            - "letterly-mongodb:/data/db"
         networks:
             - sail
 
@@ -37,5 +37,5 @@ networks:
         driver: bridge
 
 volumes:
-    sail-mongodb:
+    letterly-mongodb:
         driver: local

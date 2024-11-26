@@ -7,7 +7,9 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^11.9",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
+        "maltekuhr/laravel-gpt": "^0.1.5",
         "mongodb/laravel-mongodb": "^5.1"
     },
     "require-dev": {

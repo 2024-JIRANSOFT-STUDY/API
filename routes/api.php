@@ -3,6 +3,7 @@
 use App\GPT\Chats\CustomerSupport\CustomerSupportGPTChat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LetterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,4 +27,11 @@ Route::get('/example', function() {
     $chat->send();
 
     return $chat->latestMessage()->content;
+});
+
+
+Route::prefix('letters')->group(function () {
+    Route::get('/', [LetterController::class, 'index']);
+    Route::post('/create', [LetterController::class, 'create']);
+    Route::delete('/{id}', [LetterController::class, 'destroy']);
 });

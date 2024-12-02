@@ -1,0 +1,53 @@
+name: CI/CD Workflow
+
+on:
+  push:
+    tags: # 태그가 푸시될 때 실행
+      - '*'
+
+jobs:
+  testcode:
+    name: Test Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Execute Test Code
+        run: echo "please execute testcode in this stage"
+        if: github.event_name == 'push' # 필요에 따라 조건 추가 가능
+
+  build_tag:
+    name: Build and Push Docker Image to AWS ECR
+    runs-on: ubuntu-latest
+    needs: testcode # testcode 단계가 완료된 후 실행
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Log in to AWS ECR
+        id: login-ecr
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCESS_KEY_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Extract branch and version
+        id: extract_vars
+        run: |
+          BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | cut -d'/' -f1)
+          VERSION=$(echo "${GITHUB_REF##*/}" | cut -d'/' -f2)
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Build Docker Image
+        run: |
+          IMAGE_NAME=${{ secrets.AWS_ACCESS_KEY_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ env.BRANCH_NAME }}-${{ env.VERSION }}
+          docker build -t $IMAGE_NAME --file ./docker/production/Dockerfile .
+          docker push $IMAGE_NAME
+          docker rmi -f $IMAGE_NAME

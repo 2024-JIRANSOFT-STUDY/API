@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Auth\AuthenticationException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
-
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         api: __DIR__.'/../routes/api.php',
@@ -20,9 +20,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->redirectGuestsTo('/login');
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // AuthenticationException 처리
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            return response()->json([
+                'message' => 'Unauthenticated'
+            ], 401);
+        });
         // NotFoundHttpException 처리
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->is('api/*')) {
@@ -55,6 +61,13 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 404);
         });
 
+        // RouteNotFoundException 처리
+        $exceptions->render(function (RouteNotFoundException $e, Request $request) {
+            return response()->json([
+                'message' => 'Route not found.'
+            ], 404);
+        });
+
         // QueryException 처리
         $exceptions->render(function (QueryException $e, Request $request) {
             $response = [
@@ -64,12 +77,5 @@ return Application::configure(basePath: dirname(__DIR__))
                 $response['details'] = $e->getMessage();
             }
             return response()->json($response, 500);
-        });
-
-        // AuthenticationException 처리
-        $exceptions->render(function (AuthenticationException $e, Request $request) {
-            return response()->json([
-                'message' => 'Unauthenticated'
-            ], 401);
         });
     })->create();

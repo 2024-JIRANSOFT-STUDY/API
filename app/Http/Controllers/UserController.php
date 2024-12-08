@@ -60,14 +60,19 @@ class UserController extends Controller
     // 사용자 정보 수정
     public function update(Request $request, $id)
     {
-        try {
             $user = User::findOrFail($id);
 
-            $validatedData = $request->validate([
+            $rules = [
                 'name' => 'string|max:255',
                 'email' => 'string|email|max:255|unique:users,email,'.$user->_id,
-                'password' => 'string|min:6|confirmed',
-            ]);
+            ];
+
+            if ($request->has('password')) {
+                $rules['password'] = 'required|string|min:6|confirmed';
+                $rules['password_confirmation'] = 'required';
+            }
+
+            $validatedData = $request->validate($rules);
 
             if (isset($validatedData['password'])) {
                 $validatedData['password'] = Hash::make($validatedData['password']);
@@ -81,18 +86,25 @@ class UserController extends Controller
                 'message' => '사용자 정보 수정 성공',
                 'data' => $user
             ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'result' => 'error',
-                'message' => '사용자 정보 수정 중 오류가 발생했습니다.',
-            ], 500);
-        }
     }
 
     // 사용자 삭제
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $user = User::findOrFail($id);
+
+        // 이메일 확인 요청
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        if ($request->email !== $user->email) {
+            return response()->json([
+                'result' => 'error',
+                'message' => '이메일이 일치하지 않습니다.'
+            ], 401);
+        }
+
         $user->delete();
 
         return response()->json([

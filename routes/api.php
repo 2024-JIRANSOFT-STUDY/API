@@ -43,16 +43,9 @@ Route::prefix('users')->group(function () {
         Route::prefix('{userId}/letters')->group(function () {
             Route::get('/', [LetterController::class, 'index']);
             Route::post('/', [LetterController::class, 'create']);
+            Route::get('/{letterId}', [LetterController::class, 'show']);
             Route::delete('/{letterId}', [LetterController::class, 'destroy']);
         });
 
-        // Example 라우트
-        Route::get('/example', function() {
-            $chat = CustomerSupportGPTChat::make();
-            $chat->addMessage('I have a problem with your software.');
-            $chat->send();
-        
-            return $chat->latestMessage()->content;
-        });
     });
 });

@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MongoDB\Laravel\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Letter extends Model
 {
-    use SoftDeletes;
-    
+    use SoftDeletes, HasFactory;
+
     protected $connection = 'mongodb';
     protected $collection = 'letters';
 
@@ -22,7 +23,7 @@ class Letter extends Model
         'friendly',         // 친근함 정도
         'created_at',
         'updated_at',
-        
+
         // 선택 필드 (null 가능)
         'title',            // 제목
         'essential_comment',// 필수 포함할 내용
@@ -62,9 +63,9 @@ class Letter extends Model
     {
         return $value ?? '';
     }
-    
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-} 
+}

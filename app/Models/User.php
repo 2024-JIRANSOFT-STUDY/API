@@ -21,9 +21,14 @@ class User extends Authenticatable implements JWTSubject
         'created_at', 
         'updated_at',
         'deleted_at',
+        'is_admin',
     ];
     protected $hidden = [
         'password',
+    ];
+    
+    protected $attributes = [
+        'is_admin' => false,
     ];
     
     public function getJWTIdentifier()

@@ -37,6 +37,7 @@ class UserController extends Controller
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
             'password' => Hash::make($validatedData['password']),
+            'is_admin' => false,
         ]);
 
         return response()->json([

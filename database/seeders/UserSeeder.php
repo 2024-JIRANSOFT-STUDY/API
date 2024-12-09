@@ -20,6 +20,7 @@ class UserSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
                 'deleted_at' => null,
+                'is_admin' => true,
             ];
         }
         return $users;

@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('letters', function (Blueprint $table) {
             $table->id()->comment('기본 키');
+            $table->string('user_id')->comment('사용자 ID');
             $table->string('receiver')->comment('받는 사람 이름');
             $table->string('situation')->comment('편지 작성 상황 (생일, 결혼 등)');
             $table->integer('my_age')->comment('작성자 나이');

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2e32f3d83f9b060527138909a9ea544e",
+    "content-hash": "d070c40a3234ef5a61dcd36031c53c27",
     "packages": [
         {
             "name": "brick/math",
@@ -1515,16 +1515,16 @@
         },
         {
             "name": "league/commonmark",
-            "version": "2.5.3",
+            "version": "2.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/commonmark.git",
-                "reference": "b650144166dfa7703e62a22e493b853b58d874b0"
+                "reference": "d150f911e0079e90ae3c106734c93137c184f932"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/commonmark/zipball/b650144166dfa7703e62a22e493b853b58d874b0",
-                "reference": "b650144166dfa7703e62a22e493b853b58d874b0",
+                "url": "https://api.github.com/repos/thephpleague/commonmark/zipball/d150f911e0079e90ae3c106734c93137c184f932",
+                "reference": "d150f911e0079e90ae3c106734c93137c184f932",
                 "shasum": ""
             },
             "require": {
@@ -1549,8 +1549,9 @@
                 "phpstan/phpstan": "^1.8.2",
                 "phpunit/phpunit": "^9.5.21 || ^10.5.9 || ^11.0.0",
                 "scrutinizer/ocular": "^1.8.1",
-                "symfony/finder": "^5.3 | ^6.0 || ^7.0",
-                "symfony/yaml": "^2.3 | ^3.0 | ^4.0 | ^5.0 | ^6.0 || ^7.0",
+                "symfony/finder": "^5.3 | ^6.0 | ^7.0",
+                "symfony/process": "^5.4 | ^6.0 | ^7.0",
+                "symfony/yaml": "^2.3 | ^3.0 | ^4.0 | ^5.0 | ^6.0 | ^7.0",
                 "unleashedtech/php-coding-standard": "^3.1.1",
                 "vimeo/psalm": "^4.24.0 || ^5.0.0"
             },
@@ -1560,7 +1561,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "2.6-dev"
+                    "dev-main": "2.7-dev"
                 }
             },
             "autoload": {
@@ -1617,7 +1618,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-08-16T11:46:16+00:00"
+            "time": "2024-12-07T15:34:16+00:00"
         },
         {
             "name": "league/config",
@@ -1890,6 +1891,68 @@
             "time": "2024-09-21T08:32:55+00:00"
         },
         {
+            "name": "maltekuhr/laravel-gpt",
+            "version": "v0.1.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/maltekuhr/laravel-gpt.git",
+                "reference": "6c599c04ad121233e50d8323421c077aac5a8e9e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/maltekuhr/laravel-gpt/zipball/6c599c04ad121233e50d8323421c077aac5a8e9e",
+                "reference": "6c599c04ad121233e50d8323421c077aac5a8e9e",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.5",
+                "illuminate/support": "^9.2|^10|^11",
+                "laravel/framework": "^9.0|^10|^11",
+                "openai-php/client": "^0.8.4",
+                "php": "^8.1.0"
+            },
+            "require-dev": {
+                "orchestra/workbench": "^7.3|^8.5|9.x-dev",
+                "phpunit/phpunit": "^9.0|^10"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "MalteKuhr\\LaravelGPT\\Providers\\GPTServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MalteKuhr\\LaravelGPT\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Malte Kuhr",
+                    "email": "malte@maltekuhr.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Streamlined integration of OpenAI's ChatGPT (GPT-3.5, GPT-4) into Laravel applications.",
+            "homepage": "https://github.com/maltekuhr/laravel-gpt",
+            "keywords": [
+                "gpt",
+                "laravel",
+                "openai"
+            ],
+            "support": {
+                "issues": "https://github.com/maltekuhr/laravel-gpt/issues",
+                "source": "https://github.com/maltekuhr/laravel-gpt/tree/v0.1.5"
+            },
+            "time": "2024-03-12T17:09:46+00:00"
+        },
+        {
             "name": "mongodb/laravel-mongodb",
             "version": "5.1.0",
             "source": {
@@ -2069,68 +2132,6 @@
                 "source": "https://github.com/mongodb/mongo-php-library/tree/1.20.0"
             },
             "time": "2024-09-25T12:54:08+00:00"
-        },
-        {
-            "name": "maltekuhr/laravel-gpt",
-            "version": "v0.1.5",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/maltekuhr/laravel-gpt.git",
-                "reference": "6c599c04ad121233e50d8323421c077aac5a8e9e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/maltekuhr/laravel-gpt/zipball/6c599c04ad121233e50d8323421c077aac5a8e9e",
-                "reference": "6c599c04ad121233e50d8323421c077aac5a8e9e",
-                "shasum": ""
-            },
-            "require": {
-                "guzzlehttp/guzzle": "^7.5",
-                "illuminate/support": "^9.2|^10|^11",
-                "laravel/framework": "^9.0|^10|^11",
-                "openai-php/client": "^0.8.4",
-                "php": "^8.1.0"
-            },
-            "require-dev": {
-                "orchestra/workbench": "^7.3|^8.5|9.x-dev",
-                "phpunit/phpunit": "^9.0|^10"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "MalteKuhr\\LaravelGPT\\Providers\\GPTServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "MalteKuhr\\LaravelGPT\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Malte Kuhr",
-                    "email": "malte@maltekuhr.de",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Streamlined integration of OpenAI's ChatGPT (GPT-3.5, GPT-4) into Laravel applications.",
-            "homepage": "https://github.com/maltekuhr/laravel-gpt",
-            "keywords": [
-                "gpt",
-                "laravel",
-                "openai"
-            ],
-            "support": {
-                "issues": "https://github.com/maltekuhr/laravel-gpt/issues",
-                "source": "https://github.com/maltekuhr/laravel-gpt/tree/v0.1.5"
-            },
-            "time": "2024-03-12T17:09:46+00:00"
         },
         {
             "name": "monolog/monolog",

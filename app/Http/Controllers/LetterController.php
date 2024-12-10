@@ -2,108 +2,57 @@
 
 namespace App\Http\Controllers;
 
+use App\GPT\Actions\Letter\GenerateLetterGPTAction;
+use App\Http\Requests\GenerateLetterRequest;
 use App\Models\Letter;
 use Illuminate\Http\Request;
-use App\GPT\Actions\Letter\LetterGPTAction;
 
 class LetterController extends Controller
 {
-    // 특정 사용자의 편지 전체 조회
-    public function index(Request $request, $userId)
+    public function create(Request $request)
     {
-        $limit = $request->query('limit', 10);
-        $pagination = filter_var($request->query('pagination', 'true'), FILTER_VALIDATE_BOOLEAN);
-        $page = $request->query('page', 1);
+        // 1. GenerateLetterGPTAction 인스턴스 생성
+        $action = app(GenerateLetterGPTAction::class);
 
-        $query = Letter::where('user_id', $userId)->select('_id', 'title', 'created_at');
+        // 2. 클로저 호출
+        $function = $action->function();
 
-        if ($pagination) {
-            $letters = $query->paginate($limit, ['*'], 'page', $page);
+        // 3. 요청 데이터 준비 및 클로저 호출
+        $letter = $function(
+            $request->input('receiver'),
+            $request->input('situation'),
+            $request->input('my_age'),
+            $request->input('my_gender'),
+            $request->input('friendly'),
+            $request->input('essential_comment'),
+            $request->input('tone_content')
+        );
 
-            // 페이지 유효성 검사
-            if ($page < 1 || $page > $letters->lastPage()) {
-                return response()->json([
-                    'result' => 'error',
-                    'message' => '유효하지 않은 페이지 번호입니다.'
-                ], 400);
-            }
-            
-            return response()->json([
-                'limit' => $limit,
-                'pagination' => $pagination,
-                'total_page' => (int) $letters->lastPage(),
-                'current_page' => (int) $letters->currentPage(),
-                'next_page' => ($letters->currentPage() < $letters->lastPage() ? $letters->currentPage() + 1 : null),
-                'previous_page' => ($letters->currentPage() > 1 ? $letters->currentPage() - 1 : null),
-                'data' => $letters->items()
-            ]);
-        } else {
-            $letters = $query->limit($limit)->get();
-            return response()->json([
-                'limit' => $limit,
-                'pagination' => $pagination,
-                'data' => $letters
-            ]);
-        }
+        // 4. 결과 처리
+        return response()->json(['letter' => $letter]);
     }
 
-    public function create(Request $request, $userId)
+    public function index()
     {
-        $validatedData = $request->validate([
-            'receiver' => 'required|string|max:50',
-            'situation' => 'required|string',
-            'my_age' => 'required|integer|min:1|max:120',
-            'my_gender' => 'required|in:male,female',
-            'friendly' => 'required|integer|min:1|max:5',
-            'essential_comment' => 'nullable|string',
-            'tone_file' => 'nullable|string'
-        ]);
+        $letters = Letter::where('created_at', '>=', now()->subDays(7))
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-        try {
-            $letter =Letter::create(array_merge($validatedData, [
-                'user_id' => $userId
-            ]));
+        return response()->json($letters);
+    }
 
-            $response = LetterGPTAction::make($letter)->send('');
-            
-            return response()->json([
-                'result' => 'success', 
-                'data' => $letter
-            ], 201);
+    public function destroy(Request $request)
+    {
+        $letterId = $request->input('id');
     
-        } catch (\Exception $e) {
-            return response()->json([
-                'result' => 'error', 
-                'message' => $e->getMessage()
-            ], 500);
+        $letter = Letter::find($letterId);
+    
+        if (!$letter) {
+            return response()->json(['success' => false, 'message' => 'Letter not found'], 404);
         }
-    }
-
-    // 편지 상세 조회
-    public function show($userId, $letterId)
-    {
-        $letter = Letter::with('user')
-            ->where('user_id', $userId)
-            ->findOrFail($letterId);
-
-        return response()->json([
-            'status' => 'success',
-            'letter' => $letter
-        ]);
-    }
-
-    // 편지 삭제
-    public function destroy($userId, $letterId)
-    {
-        $letter = Letter::where('user_id', $userId)
-                       ->where('_id', $letterId)
-                       ->firstOrFail();
-
+    
         $letter->delete();
-
-        return response()->json([
-            'result' => 'success',
-            'message' => '편지가 삭제되었습니다.'
-        ]);
+    
+        return response()->json(['success' => true]);
     }
 } 

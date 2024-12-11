@@ -1,0 +1,7 @@
+.env.example
+docker-compose.yml
+openapi.yml
+composer.lock
+.editorconfig
+.git*
+.env*

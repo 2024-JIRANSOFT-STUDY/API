@@ -1,0 +1,105 @@
+name: CI/CD Workflow
+
+on:
+  push:
+    tags: # 태그가 푸시될 때 실행
+      - '*'
+
+jobs:
+  testcode:
+    name: Test Code
+    runs-on: ubuntu-latest
+    steps:
+    - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
+      with:
+        php-version: '8.2'
+    - uses: actions/checkout@v4
+    - name: Copy .env
+      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+    - name: Install Dependencies
+      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+    - name: Generate key
+      run: php artisan key:generate
+    - name: Directory Permissions
+      run: chmod -R 777 storage bootstrap/cache
+    - name: Create Database
+      run: |
+        mkdir -p database
+        touch database/database.sqlite
+    - name: Execute tests (Unit and Feature tests) via PHPUnit/Pest
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
+      run: php artisan test
+
+  build_tag:
+    name: Build and Push Docker Image to AWS ECR
+    runs-on: ubuntu-latest
+    needs: testcode # testcode 단계가 완료된 후 실행
+    env:
+      AWS_REGION: "ap-northeast-2" # AWS 리전
+      ECR_REPOSITORY: "jiran-study/letterly" # ECR 리포지토리 이름
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to AWS ECR
+        id: login-ecr
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.$AWS_REGION.amazonaws.com
+
+      - name: Extract branch and version
+        id: extract_vars
+        run: |
+          BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | cut -d'/' -f1)
+          VERSION=$(echo "${GITHUB_REF##*/}" | cut -d'/' -f2)
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Build Docker Image
+        run: |
+          IMAGE_NAME=${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${{ env.BRANCH_NAME }}-${{ env.VERSION }}
+          docker build -t $IMAGE_NAME --file ./docker/production/Dockerfile .
+          docker push $IMAGE_NAME
+          docker rmi -f $IMAGE_NAME
+
+  deploy:
+      name: Deploy to EC2
+      runs-on: self-hosted  # Runner가 설치된 EC2 사용
+      needs: build_tag
+      env:
+        AWS_REGION: "ap-northeast-2" # AWS 리전
+        ECR_REPOSITORY: "jiran-study/letterly" # ECR 리포지토리 이름
+      steps:
+      - name: Extract branch and version
+        id: extract_vars
+        run: |
+          BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | cut -d'/' -f1)
+          VERSION=$(echo "${GITHUB_REF##*/}" | cut -d'/' -f2)
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Log in to AWS ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
+
+      - name: Pull Docker Image
+        run: |
+          IMAGE_NAME=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${{ env.BRANCH_NAME }}-${{ env.VERSION }}
+          docker pull $IMAGE_NAME
+
+      - name: Tag Docker Image
+        run: |
+          IMAGE_NAME=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${{ env.BRANCH_NAME }}-${{ env.VERSION }}
+          docker tag $IMAGE_NAME jiran-study:latest
+
+      - name: Restart Docker Compose
+        run: |
+          cd /home/ubuntu && docker compose down && docker compose up -d

@@ -9,7 +9,6 @@ services:
             LARAVEL_SAIL: 1
         volumes:
             - ".env:/var/www/html/.env"
-            - "storage/logs:/var/www/html/storage/logs"
         networks:
             - sail
         depends_on:

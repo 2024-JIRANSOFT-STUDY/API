@@ -74,11 +74,8 @@ COPY . /var/www/html
 RUN cd /var/www/html \
     && rm composer.lock -f \
     && composer install \
-    && php artisan optimize:clear \
-    && php artisan config:cache \
-    && php artisan route:cache \
+    && php artisan cache:clear \
     && php artisan view:cache \
-    && php artisan optimize
 
 RUN chown -R sail:sail /var/www/html \
     && chmod -R 775 /var/www/html/storage \

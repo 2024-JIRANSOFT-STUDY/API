@@ -27,7 +27,7 @@ class LetterController extends Controller
                     'message' => '유효하지 않은 페이지 번호입니다.'
                 ], 400);
             }
-            
+
             return response()->json([
                 'limit' => $limit,
                 'pagination' => $pagination,
@@ -60,20 +60,19 @@ class LetterController extends Controller
         ]);
 
         try {
-            $letter =Letter::create(array_merge($validatedData, [
+            $letter = Letter::create(array_merge($validatedData, [
                 'user_id' => $userId
             ]));
 
             $response = LetterGPTAction::make($letter)->send('');
-            
+
             return response()->json([
-                'result' => 'success', 
+                'result' => 'success',
                 'data' => $letter
             ], 201);
-    
         } catch (\Exception $e) {
             return response()->json([
-                'result' => 'error', 
+                'result' => 'error',
                 'message' => $e->getMessage()
             ], 500);
         }
@@ -96,8 +95,8 @@ class LetterController extends Controller
     public function destroy($userId, $letterId)
     {
         $letter = Letter::where('user_id', $userId)
-                       ->where('_id', $letterId)
-                       ->firstOrFail();
+            ->where('_id', $letterId)
+            ->firstOrFail();
 
         $letter->delete();
 
@@ -106,4 +105,16 @@ class LetterController extends Controller
             'message' => '편지가 삭제되었습니다.'
         ]);
     }
-} 
+    public function deleteAll($userId)
+    {
+        // 조건에 맞는 레코드를 한 번의 쿼리로 삭제
+        $deletedRows = Letter::where('user_id', $userId)->delete();
+
+        return response()->json([
+            'result' => 'success',
+            'message' => $deletedRows > 0
+                ? '편지가 전체 삭제되었습니다.'
+                : '삭제할 편지가 없습니다.'
+        ]);
+    }
+}

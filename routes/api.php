@@ -20,7 +20,7 @@ use App\Http\Controllers\UserController;
 // 인증 관련 라우트
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', [AuthController::class, 'login']);
-    
+
     // 인증이 필요한 라우트
     Route::group(['middleware' => 'auth:api'], function () {
         Route::post('logout', [AuthController::class, 'logout']); // 로그아웃
@@ -43,9 +43,9 @@ Route::prefix('users')->group(function () {
         Route::prefix('{userId}/letters')->group(function () {
             Route::get('/', [LetterController::class, 'index']);
             Route::post('/', [LetterController::class, 'create']);
+            Route::delete('/', [LetterController::class, 'deleteAll']);
             Route::get('/{letterId}', [LetterController::class, 'show']);
             Route::delete('/{letterId}', [LetterController::class, 'destroy']);
         });
-
     });
 });

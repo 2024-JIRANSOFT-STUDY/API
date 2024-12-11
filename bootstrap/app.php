@@ -11,6 +11,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Auth\AuthenticationException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
+use Illuminate\Support\Facades\Log;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         // AuthenticationException 처리
         $exceptions->render(function (AuthenticationException $e, Request $request) {
+            Log::debug($request->ip());
             return response()->json([
                 'message' => 'Unauthenticated'
             ], 401);
@@ -37,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => 'Record not found.'
                 ], 404);
             }
+            Log::debug($request->ip());
             return response()->view('error', [], 404);
         });
 

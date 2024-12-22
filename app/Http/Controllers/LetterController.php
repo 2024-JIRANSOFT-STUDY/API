@@ -71,6 +71,9 @@ class LetterController extends Controller
                 'data' => $letter
             ], 201);
         } catch (\Exception $e) {
+            \Log::error('An error occurred: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
             return response()->json([
                 'result' => 'error',
                 'message' => $e->getMessage()

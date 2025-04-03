@@ -2,46 +2,67 @@
 
 namespace App\GPT\Chats\CustomerSupport;
 
-use MalteKuhr\LaravelGPT\GPTChat;
+use OpenAI\Laravel\Facades\OpenAI;
+use Illuminate\Support\Facades\Log;
 
-class CustomerSupportGPTChat extends GPTChat
+class CustomerSupportGPTChat
 {
-    /**
-     * The message which explains the assistant what to do and which rules to follow.
-     *
-     * @return string|null
-     */
-    public function systemMessage(): ?string
-    {
-        return null;
-    }
+    protected array $messages = [];
+    protected array $functions = [];
 
-    /**
-     * The functions which are available to the assistant. The functions must be
-     * an array of classes (e.g. [new SaveSentimentGPTFunction()]). The functions
-     * must extend the GPTFunction class.
-     *
-     * @return array|null
-     */
-    public function functions(): ?array
+    public function __construct()
     {
-        return [
-            // new ExampleGPTFunction()
+        $this->messages[] = [
+            'role' => 'system',
+            'content' => "당신은 친절하고 전문적인 고객 지원 담당자입니다.
+                고객의 문의에 대해 정확하고 도움이 되는 답변을 제공해주세요.
+                항상 한국어로 응답해주세요."
         ];
     }
 
-    /**
-     * The function call method can force the model to call a specific function or
-     * force the model to answer with a message. If you return with the class name
-     * e.g. SaveSentimentGPTFunction::class the model will call the function. If
-     * you return with false the model will answer with a message. If you return
-     * with null or true the model will decide if it should call a function or
-     * answer with a message.
-     *
-     * @return string|bool|null
-     */
-    public function functionCall(): string|bool|null
+    public function send(string $message)
     {
-        return null;
+        try {
+            $this->messages[] = [
+                'role' => 'user',
+                'content' => $message
+            ];
+
+            $response = OpenAI::chat()->create([
+                'model' => 'gpt-3.5-turbo',
+                'messages' => $this->messages,
+                'functions' => $this->functions,
+                'temperature' => 0.7,
+                'max_tokens' => 1000,
+            ]);
+
+            $assistantMessage = $response->choices[0]->message;
+            $this->messages[] = [
+                'role' => 'assistant',
+                'content' => $assistantMessage->content
+            ];
+
+            return $assistantMessage->content;
+        } catch (\Exception $e) {
+            Log::error('Customer support chat failed: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function addFunction(array $function)
+    {
+        $this->functions[] = $function;
+    }
+
+    public function clearHistory()
+    {
+        $this->messages = [
+            [
+                'role' => 'system',
+                'content' => "당신은 친절하고 전문적인 고객 지원 담당자입니다.
+                    고객의 문의에 대해 정확하고 도움이 되는 답변을 제공해주세요.
+                    항상 한국어로 응답해주세요."
+            ]
+        ];
     }
 }

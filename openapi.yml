@@ -1,0 +1,637 @@
+openapi: 3.0.0
+info:
+  title: Letter Writing API
+  version: 1.0.0
+  description: 편지 작성 API 서비스
+
+servers:
+  - url: /api
+    description: API 서버
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        is_admin:
+          type: boolean
+          default: false
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Letter:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        receiver:
+          type: string
+          maxLength: 50
+        situation:
+          type: string
+        my_age:
+          type: integer
+          minimum: 1
+          maximum: 120
+        my_gender:
+          type: string
+          enum: [male, female]
+        friendly:
+          type: integer
+          minimum: 1
+          maximum: 5
+        essential_comment:
+          type: string
+          nullable: true
+        tone_file:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        result:
+          type: string
+          example: error
+        message:
+          type: string
+
+    Success:
+      type: object
+      properties:
+        result:
+          type: string
+          example: success
+        message:
+          type: string
+        data:
+          type: object
+
+paths:
+  /auth/login:
+    post:
+      summary: 로그인
+      tags:
+        - 인증
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: 로그인 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 토큰이 발급되었습니다.
+                  data:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      token_type:
+                        type: string
+                        example: bearer
+                      expires_in:
+                        type: integer
+                      user_id:
+                        type: string
+        '401':
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      summary: 로그아웃
+      tags:
+        - 인증
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 로그아웃 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '401':
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      summary: 현재 사용자 정보 조회
+      tags:
+        - 인증
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 사용자 정보 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 사용자 정보 조회 성공
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/refresh:
+    post:
+      summary: 토큰 갱신
+      tags:
+        - 인증
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 토큰 갱신 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 토큰이 발급되었습니다.
+                  data:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      token_type:
+                        type: string
+                        example: bearer
+                      expires_in:
+                        type: integer
+                      user_id:
+                        type: string
+        '401':
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/check-email:
+    post:
+      summary: 이메일 중복 체크
+      tags:
+        - 사용자
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: 이메일 체크 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                  available:
+                    type: boolean
+
+  /users/register:
+    post:
+      summary: 회원가입
+      tags:
+        - 사용자
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+                - password_confirmation
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                password_confirmation:
+                  type: string
+                  format: password
+      responses:
+        '201':
+          description: 회원가입 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 회원가입이 완료되었습니다.
+                  data:
+                    $ref: '#/components/schemas/User'
+
+  /users:
+    get:
+      summary: 사용자 목록 조회
+      tags:
+        - 사용자
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 사용자 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 사용자 목록 조회 성공
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+
+    patch:
+      summary: 사용자 정보 수정
+      tags:
+        - 사용자
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                password_confirmation:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: 사용자 정보 수정 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 사용자 정보 수정 성공
+                  data:
+                    $ref: '#/components/schemas/User'
+
+    delete:
+      summary: 사용자 삭제
+      tags:
+        - 사용자
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: 사용자 삭제 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  /users/{userId}/letters:
+    get:
+      summary: 사용자의 편지 목록 조회
+      tags:
+        - 편지
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: pagination
+          in: query
+          schema:
+            type: boolean
+            default: true
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: 편지 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  limit:
+                    type: integer
+                  pagination:
+                    type: boolean
+                  total_page:
+                    type: integer
+                  current_page:
+                    type: integer
+                  next_page:
+                    type: integer
+                    nullable: true
+                  previous_page:
+                    type: integer
+                    nullable: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Letter'
+
+    post:
+      summary: 편지 작성
+      tags:
+        - 편지
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - receiver
+                - situation
+                - my_age
+                - my_gender
+                - friendly
+              properties:
+                receiver:
+                  type: string
+                  maxLength: 50
+                situation:
+                  type: string
+                my_age:
+                  type: integer
+                  minimum: 1
+                  maximum: 120
+                my_gender:
+                  type: string
+                  enum: [male, female]
+                friendly:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                essential_comment:
+                  type: string
+                tone_file:
+                  type: string
+      responses:
+        '201':
+          description: 편지 작성 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/Letter'
+
+    delete:
+      summary: 사용자의 모든 편지 삭제
+      tags:
+        - 편지
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 편지 전체 삭제 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+
+  /users/{userId}/letters/{letterId}:
+    get:
+      summary: 편지 상세 조회
+      tags:
+        - 편지
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: letterId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 편지 상세 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  letter:
+                    $ref: '#/components/schemas/Letter'
+
+    delete:
+      summary: 편지 삭제
+      tags:
+        - 편지
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: letterId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 편지 삭제 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'

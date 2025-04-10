@@ -13,6 +13,11 @@ class LetterGPTAction
         protected Letter $letter,
     ) {}
 
+    public static function make(Letter $letter): self
+    {
+        return new self($letter);
+    }
+
     public function send(string $message)
     {
         try {

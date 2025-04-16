@@ -2,46 +2,48 @@
 
 namespace App\GPT\Actions\Sentiment;
 
-use MalteKuhr\LaravelGPT\GPTAction;
-use Closure;
+use OpenAI\Laravel\Facades\OpenAI;
+use Illuminate\Support\Facades\Log;
 
-class SentimentGPTAction extends GPTAction
+class SentimentGPTAction
 {
-    /**
-     * The message which explains the assistant what to do and which rules to follow.
-     *
-     * @return string|null
-     */
-    public function systemMessage(): ?string
+    public function send(string $message)
     {
-        return null;
-    }
+        try {
+            $systemMessage = "당신은 텍스트의 감정을 분석하는 전문가입니다.
+                주어진 텍스트의 감정을 분석하여 다음 형식으로 응답해주세요:
 
-    /**
-     * Specifies the function to be invoked by the model. The function is implemented as a
-     * Closure which may take parameters that are provided by the model. If extra arguments
-     * are included in the documentation to optimize model's performance (by allowing it more
-     * thinking time), these can be disregarded by not including them within the Closure
-     * parameters.
-     *
-     * @return Closure
-     */
-    public function function(): Closure
-    {
-        return function (): mixed {
-            // TODO: Implement Closure.
-        };
-    }
+                감정(emotion): [주요 감정]
+                강도(intensity): [1-10 사이의 숫자]
+                설명(description): [감정 분석에 대한 설명]";
 
-    /**
-     * Defines the rules for input validation and JSON schema generation. Override this
-     * method to provide custom validation rules for the function. The documentation will
-     * have the same order as the rules are defined in this method.
-     *
-     * @return array
-     */
-    public function rules(): array
-    {
-        return [];
+            $response = OpenAI::chat()->create([
+                'model' => 'gpt-3.5-turbo',
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemMessage],
+                    ['role' => 'user', 'content' => $message]
+                ],
+                'temperature' => 0.3,
+                'max_tokens' => 500,
+            ]);
+
+            $content = $response->choices[0]->message->content;
+
+            // 감정, 강도, 설명 분리
+            preg_match('/감정\(emotion\): (.*?)\n강도\(intensity\): (.*?)\n설명\(description\): (.*)/s', $content, $matches);
+
+            if (count($matches) !== 4) {
+                throw new \InvalidArgumentException('응답 형식이 올바르지 않습니다.');
+            }
+
+            return [
+                'emotion' => trim($matches[1]),
+                'intensity' => (int)trim($matches[2]),
+                'description' => trim($matches[3])
+            ];
+        } catch (\Exception $e) {
+            Log::error('Sentiment analysis failed: ' . $e->getMessage());
+            throw $e;
+        }
     }
 }

@@ -10,8 +10,8 @@
         "laravel/framework": "^11.9",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
-        "maltekuhr/laravel-gpt": "^0.1.5",
         "mongodb/laravel-mongodb": "^5.1",
+        "openai-php/laravel": "^0.8.1",
         "tymon/jwt-auth": "^2.1"
     },
     "require-dev": {
